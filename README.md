@@ -1,6 +1,6 @@
 # Presser
 Simple AHK script for repeatedly pressing keys with fixed intervals.
-You can create any binds count which can run independently with varios intervals. This is my first functional github project which serves github education purpouse more than any else. But it sertainly can by useful for someone anyway. :)
+You can create any binds count which can run independently with varios intervals. This is my first functional github project which serves github education purpouse more than any else. But it certainly can by useful for someone anyway. :)
 
 ###Configuration
 You can configure script from presser.ini file in folder with program.
