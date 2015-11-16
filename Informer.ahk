@@ -12,16 +12,17 @@ class Informer{
 		Informer.ToolTip(text,time, x, y, n, "Screen")
 	}
 	
-	ColoredSplashImage(text, width:=100, fontSize:=12, color:="Silver", time:=1000, x:=0, y:=0){
+	ColoredSplashImage(text, time:=1000, fontSize:=12, color:="Silver", x:=0, y:=0){
 		Gosub, TurnOffSI
-		SplashImage,,w%width% x%x% y%y% b fs%fontSize% cw%color%, %text%
+		SplashImage,,x%x% y%y% b fs%fontSize% cw%color%, %text%
 		if (time!=-1)
 			SetTimer, TurnOffSI, %time%
 	}
 	
-	SplashImage(text, width:=100, fontSize:=12, time:=1000, x:=0, y:=0){
-		Gosub, TurnOffSI
-		SplashImage,,w%width% x%x% y%y% b fs%fontSize%, %text%
+	SplashImage(text, time:=1000, fontSize:=12, x:=0, y:=0){
+		SplashImage, off
+		SetTimer, TurnOffSI, Off
+		SplashImage,,x%x% y%y% b fs%fontSize%, %text%
 		if (time!=-1)
 			SetTimer, TurnOffSI, %time%
 	}

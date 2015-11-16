@@ -32,6 +32,7 @@ CreateDefaultInfo(){
 	IniRead, disableSound, %fileName%, Config, DisableFrequency, 600
 	IniRead, tickSound, %fileName%, Config, TickFrequency, 300
 	IniRead, notifyType, %fileName%, Config, NotifyType, 2
+	IniRead, NotificationTime, %fileName%, Config, NotificationTime, 1000
 	
 	defaultInfo:=Object()
 	defaultInfo.interval:=interval
@@ -40,6 +41,7 @@ CreateDefaultInfo(){
 	defaultInfo.enableSound:=enableSound
 	defaultInfo.tickSound:=tickSound
 	defaultInfo.notifyType:=notifyType
+	defaultInfo.NotificationTime:=NotificationTime
 
 	return defaultInfo
 }
@@ -56,7 +58,6 @@ ReadInfo(sectionName){
 	IniRead, runOnStart, %fileName%, %sectionName%, RunOnStart, % defaultInfo.runOnStart
 
 	if (k==-1||tk==-1){
-		;Log("Error", "Key or ToggleKey is missing for " . name . " key.")
 		return -1
 	}
 
@@ -120,10 +121,10 @@ Notify(message){
 		Informer.StaticToolTip(message)		
 	}
 	else if (defaultInfo.notifyType==2){
-		ToolTip, % message
+		Informer.MouseToolTip(message, defaultInfo.NotificationTime)
 	}
 	else if (defaultInfo.notifyType==3){
-		Informer.SplashImage(message)
+		Informer.SplashImage(message, defaultInfo.NotificationTime)
 	}
 }
 
