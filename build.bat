@@ -1,11 +1,16 @@
 @echo off
-set version=0.1
+
+::change version for new releases
+set version=0.2
+::specify path to compiler
 set CompilerFolderPath=%ProgramFiles%\AutoHotkey\Compiler
 
-:: Don't edit this
+:: Don't edit anything below as long as it works
 set Ahk2ExePath="%CompilerFolderPath%\Ahk2Exe.exe"
 set AutoHotkeySCPath="%CompilerFolderPath%\AutoHotkeySC.bin"
-set AutoHotkeySCPath64="%CompilerFolderPath%\Unicode 64-bit.bin"
+set AutoHotkeyU64Path="%CompilerFolderPath%\Unicode 64-bit.bin"
+set AutoHotkeyU32Path="%CompilerFolderPath%\Unicode 32-bit.bin"
+set AutoHotkeyANSI32Path="%CompilerFolderPath%\ANSI 32-bit.bin"
 
 IF not exist bin (
 	echo Creating bin folder.
@@ -19,6 +24,30 @@ IF not exist bin (
 
 echo Build SC version...
 %Ahk2ExePath% /in presser.ahk /out bin/presser_SC_v%version%.exe /icon icon.ico /bin %AutoHotkeySCPath%
+if not exist bin/presser_SC_v%version%.exe (
+	echo compiling error!
+	exit
+) 
+
 echo Build Unicode 64 version...
-%Ahk2ExePath% /in presser.ahk /out bin/presser_U64_v%version%.exe /icon icon.ico /bin %AutoHotkeySCPath64%
+%Ahk2ExePath% /in presser.ahk /out bin/presser_U64_v%version%.exe /icon icon.ico /bin %AutoHotkeyU64Path%
+if not exist bin/presser_U64_v%version%.exe (
+	echo compiling error!
+	exit
+)
+
+echo Build Unicode 32 version...
+%Ahk2ExePath% /in presser.ahk /out bin/presser_U32_v%version%.exe /icon icon.ico /bin %AutoHotkeyU32Path%
+if not exist bin/presser_U32_v%version%.exe (
+	echo compiling error!
+	exit
+)
+
+echo Build ANSI 32 version...
+%Ahk2ExePath% /in presser.ahk /out bin/presser_ANSI32_v%version%.exe /icon icon.ico /bin %AutoHotkeyANSI32Path%
+if not exist bin/presser_ANSI32_v%version%.exe (
+	echo compiling error!
+	exit	
+)
+
 echo Done.

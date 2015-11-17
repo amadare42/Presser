@@ -1,61 +1,139 @@
 #Persistent
+if (A_IsCompiled != 1)
+	Menu, Tray, Icon, Icon.ico 
 
 #include SetTimerEx.ahk
 #Include Informer.ahk
 
 global timersArray := Object()
-global arrayLenght := 0
-global fileName := "presser.ini"
-global defaultInfo:=CreateDefaultInfo()
+global configFileName := "config.ini"
+global config := Object()
+global currentBeepInfo := Object()
 
-Loop
-{		
-	keyInfo:=ReadInfo("Key" . A_Index)
-	if (keyInfo==-1)
-		break
+ReadOrDefaultConfig()
 
-	timersArray.Insert(keyInfo)
-	arrayLenght++
-	
-	RegisterHotkey(keyInfo)
-	if (keyInfo.runOnStart=="True"){
-		SetTimerState(keyInfo, true)
-	}
+Menu, tray, add, Reload config, ReloadConfigLabel
+Menu, tray, add, Get KeyCode, GetKeyCodeLabel
+Menu, tray, add, Open config.ini, OpenConfigLabel
+
+IfNotExist, %configFileName%
+{
+	MsgBox, %configFileName% is missing. `nScript will create it now.
+	WriteConfigFile()
 }
+ReadAllKeys()
 return
 
-CreateDefaultInfo(){
+ClearTimers(){
+	For keyInfo in timersArray
+	{
+		SetTimerState(keyInfo, false)
+	}
 
-	IniRead, interval, %fileName%, Config, Interval, 1000
-	IniRead, runOnStart, %fileName%, Config, RunOnStart, False
-	IniRead, enableSound, %fileName%, Config, EnableFrequency, 900
-	IniRead, disableSound, %fileName%, Config, DisableFrequency, 600
-	IniRead, tickSound, %fileName%, Config, TickFrequency, 300
-	IniRead, notifyType, %fileName%, Config, NotifyType, 2
-	IniRead, NotificationTime, %fileName%, Config, NotificationTime, 1000
+	timersArray := Object()
+}
+
+ReadAllKeys(){
+	Loop
+	{		
+		keyInfo:=ReadInfo("Key" . A_Index)
+		if (keyInfo==-1)
+			break
+
+		timersArray.Insert(keyInfo)
+		
+		RegisterHotkey(keyInfo)
+		if (keyInfo.runOnStart=="True"){
+			SetTimerState(keyInfo, true)
+		}
+	}
+}
+
+ValidateKeyValues(keyInfo){
+	if (keyInfo.interval<100)
+	{
+		Log("Warning", "Interval for " . keyInfo.name . " was <100 (" . keyInfo.interval . "). Set to deafult 1000.")
+		keyInfo.interval:=1000
+	}
+	if (keyInfo.beepLength=0)
+	{
+		Log("Warning", "BeepLength for " . keyInfo.name . " was <=0 (" . keyInfo.beepLength . "). Set to deafult 150.")
+		keyInfo.interval:=150		
+	}	
+	if (keyInfo.sendType<=0 || keyInfo.sendType>3)
+	{
+		Log("Warning", "SendType for " . keyInfo.name . " was out of range (" . keyInfo.sendType . "). Set to deafult 3.")
+		keyInfo.sendType:=3	
+
+	}
+
+	if (keyInfo.name!="Config")
+	{
+		if (keyInfo.beepLength>=keyInfo.interval)
+		{
+			newBeep:=keyInfo.interval-50
+			Log("Warning", "BeepLength for " . keyInfo.name . " was >= Interval (" . keyInfo.beepLength . ">=" . keyInfo.interval . "). This can cause input latency & other problems. Set to " . newBeep)
+			keyInfo.beepLength:=newBeep
+		}
+	}
+}
+
+ReadOrDefaultConfig(){
+
+	IniRead, interval, %configFileName%, Config, Interval, 1000
+	IniRead, runOnStart, %configFileName%, Config, RunOnStart, False
+	IniRead, enableSound, %configFileName%, Config, EnableFrequency, 900
+	IniRead, disableSound, %configFileName%, Config, DisableFrequency, 600
+	IniRead, tickSound, %configFileName%, Config, TickFrequency, 300
+	IniRead, notifyType, %configFileName%, Config, NotifyType, 3
+	IniRead, notificationTime, %configFileName%, Config, NotificationTime, 2000
+	IniRead, sendType, %configFileName%, Config, SendType, 3
+	IniRead, beepLength, %configFileName%, Config, BeepLength, 150
 	
-	defaultInfo:=Object()
-	defaultInfo.interval:=interval
-	defaultInfo.runOnStart:=runOnStart
-	defaultInfo.disableSound:=disableSound
-	defaultInfo.enableSound:=enableSound
-	defaultInfo.tickSound:=tickSound
-	defaultInfo.notifyType:=notifyType
-	defaultInfo.NotificationTime:=NotificationTime
+	config:=Object()
+	config.name:="Config"
+	config.interval:=interval
+	config.runOnStart:=runOnStart
+	config.disableSound:=disableSound
+	config.enableSound:=enableSound
+	config.tickSound:=tickSound
+	config.notifyType:=notifyType
+	config.sendType:=sendType
+	config.notificationTime:=notificationTime
+	config.beepLength:=beepLength
 
-	return defaultInfo
+	ValidateKeyValues(config)
+}
+
+WriteConfigFile(){
+	try{
+		IniWrite, % config.interval, %configFileName%, Config, Interval
+		IniWrite, % config.runOnStart, %configFileName%, Config, RunOnStart
+		IniWrite, % config.enableSound, %configFileName%, Config, EnableFrequency
+		IniWrite, % config.disableSound, %configFileName%, Config, DisableFrequency
+		IniWrite, % config.tickSound, %configFileName%, Config, TickFrequency
+		IniWrite, % config.notifyType, %configFileName%, Config, NotifyType
+		IniWrite, % config.notificationTime, %configFileName%, Config, NotificationTime
+		IniWrite, % config.sendType, %configFileName%, Config, SendType
+		IniWrite, % config.beepLength, %configFileName%, Config, BeepLength
+	}
+	catch e
+	{
+		Log("Error", "Cannot create config file. Error description:" . e)
+	}
 }
 
 ReadInfo(sectionName){
 	
-	IniRead, k, %fileName%, %sectionName%, Key, -1
-	IniRead, tk, %fileName%, %sectionName%, ToggleKey, -1
-	IniRead, i, %fileName%, %sectionName%, Interval, % defaultInfo.interval
-	IniRead, name, %fileName%, %sectionName%, Name, %tk% - %k%
-	IniRead, enableSound, %fileName%, %sectionName%, EnableFrequency, % defaultInfo.enableSound
-	IniRead, disableSound, %fileName%, %sectionName%, DisableFrequency, % defaultInfo.disableSound
-	IniRead, tickSound, %fileName%, %sectionName%, TickFrequency, % defaultInfo.tickSound
-	IniRead, runOnStart, %fileName%, %sectionName%, RunOnStart, % defaultInfo.runOnStart
+	IniRead, k, %configFileName%, %sectionName%, Key, -1
+	IniRead, tk, %configFileName%, %sectionName%, ToggleKey, -1
+	IniRead, i, %configFileName%, %sectionName%, Interval, % config.interval
+	IniRead, name, %configFileName%, %sectionName%, Name, %tk% - %k%
+	IniRead, enableSound, %configFileName%, %sectionName%, EnableFrequency, % config.enableSound
+	IniRead, disableSound, %configFileName%, %sectionName%, DisableFrequency, % config.disableSound
+	IniRead, tickSound, %configFileName%, %sectionName%, TickFrequency, % config.tickSound
+	IniRead, runOnStart, %configFileName%, %sectionName%, RunOnStart, % config.runOnStart
+	IniRead, beepLength, %configFileName%, %sectionName%, BeepLength, % config.beepLength
 
 	if (k==-1||tk==-1){
 		return -1
@@ -71,18 +149,26 @@ ReadInfo(sectionName){
 	keyInfo.tickSound:=tickSound
 	keyInfo.runOnStart:=runOnStart
 	keyInfo.running:=false
+	keyInfo.beepLength:=beepLength
+
+	ValidateKeyValues(keyInfo)
 
 	return keyInfo
 }
 
 TimerSubscriber(keyInfo){
-	key:=keyInfo.key
-	Send, %key%
+	if (keyInfo.sendType==1)
+		Send % keyInfo.key
+	else if (keyInfo.sendType==2)
+		SendPlay % keyInfo.key
+	else 
+		SendInput % keyInfo.key
+
 	if (keyInfo.tickSound!=-1){
-		SoundBeep, % keyInfo.tickSound, 300
+		SoundBeep, % keyInfo.tickSound, keyInfo.beepLength
 	}
 }
-;
+
 RegisterHotkey(keyInfo){
 	Hotkey, % keyInfo.toggleKey, hotkeyLabel
 }
@@ -93,7 +179,7 @@ SetTimerState(keyInfo, state){
 		keyInfo.timer:=""
 		keyInfo.running:=false
 		if (keyInfo.disableSound!=-1){
-			SoundBeep, % keyInfo.disableSound, 300
+			SoundBeep, % keyInfo.disableSound, keyInfo.beepLength
 		}
 	}
 	else
@@ -102,35 +188,48 @@ SetTimerState(keyInfo, state){
 			keyInfo.timer:=SetTimerEx(keyInfo.interval, "TimerSubscriber", keyInfo)
 			keyInfo.running:=true
 			if (keyInfo.enableSound!=-1){
-				SoundBeep, % keyInfo.enableSound, 300
+				SoundBeep, % keyInfo.enableSound, keyInfo.beepLength
 			}
 		}
 	}
 }
 
+Beep(frequncy, duration){
+	currentBeepInfo:=Object()
+	currentBeepInfo.frequency:=frequncy
+	currentBeepInfo.duration:=duration
+	SetTimer, BeepLabel, 0
+}
+
 Log(level, message){
-	time:= A_DDD . "::" . A_Hour . ":" . A_Min . ":" . A_Sec
+	time:= A_MM . "." . A_DD . "::" . A_Hour . ":" . A_Min . ":" . A_Sec
 	FileAppend, %time% (%level%) > %message%`n, log.txt
 }
 
 Notify(message){
-	if (defaultInfo.notifyType==0)
+	if (config.notifyType==0)
 		return
-	else if (defaultInfo.notifyType==1)
+	else if (config.notifyType==1)
 	{
 		Informer.StaticToolTip(message)		
 	}
-	else if (defaultInfo.notifyType==2){
-		Informer.MouseToolTip(message, defaultInfo.NotificationTime)
+	else if (config.notifyType==2){
+		Informer.MouseToolTip(message, config.notificationTime)
 	}
-	else if (defaultInfo.notifyType==3){
-		Informer.SplashImage(message, defaultInfo.NotificationTime)
+	else if (config.notifyType==3){
+		Informer.SplashImage(message, config.notificationTime)
 	}
 }
 
+BeepLabel:
+	SetTimer, BeepLabel, Off
+	SoundBeep, % currentBeepInfo.frequncy, currentBeepInfo.duration
+return
+
+
 hotkeyLabel:
 	founded:=false
-	Loop, %arrayLenght%
+	Loop, % timersArray.GetCapacity()
 	{
 		keyInfo:=timersArray[A_Index]
 		if (keyInfo.toggleKey==A_ThisHotkey){
@@ -148,3 +247,30 @@ hotkeyLabel:
 		Log("Error", "Cannot found " . keyInfo.name)
 	}
 Return
+
+ReloadConfigLabel:
+	ClearTimers()
+	ReadOrDefaultConfig()
+	ReadAllKeys()
+return
+
+GetKeyCodeLabel:
+	; source: https://autohotkey.com/board/topic/21105-crazy-scripting-scriptlet-to-find-scancode-of-a-key/
+	SetFormat, Integer, Hex
+	Gui +ToolWindow +AlwaysOnTop
+	Gui, Font, s14 Bold, Arial
+	Gui, Add, Text, w100 h33 vSC 0x201 +Border, {SC000}
+	Gui, Show,, % "Get scan code"
+	Loop 9
+	  OnMessage( 255+A_Index, "ScanCode" ) ; 0x100 to 0x108
+	Return
+
+	ScanCode( wParam, lParam ) {
+		Clipboard := "{SC" . SubStr((((lParam>>16) & 0xFF)+0xF000),-2) . "}"
+		GuiControl,, SC, %Clipboard%
+	}
+return
+
+OpenConfigLabel:
+	Run, %configFileName%
+return
