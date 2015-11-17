@@ -35,6 +35,7 @@ type of notification on keybind toggling. <br>
 	<li>1 - tooltip on upper-left part of the screen</li>
 	<li>2 - tooltip on cursor position</li>
 	<li>3 - gui window on upper-left part of the screen</li>
+</ul>
 <h6>NotificationTime</h6>
 duration for which enabling/disabling keybind hint will be shown.
 
