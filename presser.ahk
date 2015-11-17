@@ -134,6 +134,7 @@ ReadInfo(sectionName){
 	IniRead, tickSound, %configFileName%, %sectionName%, TickFrequency, % config.tickSound
 	IniRead, runOnStart, %configFileName%, %sectionName%, RunOnStart, % config.runOnStart
 	IniRead, beepLength, %configFileName%, %sectionName%, BeepLength, % config.beepLength
+	IniRead, sendType, %configFileName%, Config, SendType, % config.sendType
 
 	if (k==-1||tk==-1){
 		return -1
@@ -150,6 +151,7 @@ ReadInfo(sectionName){
 	keyInfo.runOnStart:=runOnStart
 	keyInfo.running:=false
 	keyInfo.beepLength:=beepLength
+	keyInfo.sendType:=sendType
 
 	ValidateKeyValues(keyInfo)
 
@@ -194,13 +196,6 @@ SetTimerState(keyInfo, state){
 	}
 }
 
-Beep(frequncy, duration){
-	currentBeepInfo:=Object()
-	currentBeepInfo.frequency:=frequncy
-	currentBeepInfo.duration:=duration
-	SetTimer, BeepLabel, 0
-}
-
 Log(level, message){
 	time:= A_MM . "." . A_DD . "::" . A_Hour . ":" . A_Min . ":" . A_Sec
 	FileAppend, %time% (%level%) > %message%`n, log.txt
@@ -220,12 +215,6 @@ Notify(message){
 		Informer.SplashImage(message, config.notificationTime)
 	}
 }
-
-BeepLabel:
-	SetTimer, BeepLabel, Off
-	SoundBeep, % currentBeepInfo.frequncy, currentBeepInfo.duration
-return
-
 
 hotkeyLabel:
 	founded:=false
