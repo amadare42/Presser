@@ -1,7 +1,7 @@
 @echo off
 
 ::change version for new releases
-set version=0.21
+set version=0.22
 ::specify path to compiler
 set CompilerFolderPath=%ProgramFiles%\AutoHotkey\Compiler
 
