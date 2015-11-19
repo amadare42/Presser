@@ -1,4 +1,6 @@
 #Persistent
+#InstallKeybdHook
+
 if (A_IsCompiled != 1)
 	Menu, Tray, Icon, Icon.ico 
 
@@ -159,12 +161,13 @@ ReadInfo(sectionName){
 }
 
 TimerSubscriber(keyInfo){
+	key:=keyInfo.key
 	if (keyInfo.sendType==1)
-		Send % keyInfo.key
+		Send, %key%
 	else if (keyInfo.sendType==2)
-		SendPlay % keyInfo.key
+		SendPlay, %key%
 	else 
-		SendInput % keyInfo.key
+		SendInput, %key%
 
 	if (keyInfo.tickSound!=-1){
 		SoundBeep, % keyInfo.tickSound, keyInfo.beepLength
@@ -244,20 +247,7 @@ ReloadConfigLabel:
 return
 
 GetKeyCodeLabel:
-	; source: https://autohotkey.com/board/topic/21105-crazy-scripting-scriptlet-to-find-scancode-of-a-key/
-	SetFormat, Integer, Hex
-	Gui +ToolWindow +AlwaysOnTop
-	Gui, Font, s14 Bold, Arial
-	Gui, Add, Text, w100 h33 vSC 0x201 +Border, {SC000}
-	Gui, Show,, % "Get scan code"
-	Loop 9
-	  OnMessage( 255+A_Index, "ScanCode" ) ; 0x100 to 0x108
-	Return
-
-	ScanCode( wParam, lParam ) {
-		Clipboard := "{SC" . SubStr((((lParam>>16) & 0xFF)+0xF000),-2) . "}"
-		GuiControl,, SC, %Clipboard%
-	}
+	KeyHistory
 return
 
 OpenConfigLabel:
